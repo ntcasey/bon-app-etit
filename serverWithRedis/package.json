@@ -1,0 +1,18 @@
+{
+  "name": "redis_cache",
+  "version": "1.0.0",
+  "description": "redis cache",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./redis_server/index.js"
+  },
+  "author": "Casey Nguyen",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "express": "^4.17.1",
+    "mongoose": "^5.11.9",
+    "newrelic": "^7.0.2",
+    "redis": "^3.0.2"
+  }
+}

@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  server:
+    container_name: redis-container
+    restart: always
+    build: ./
+    ports:
+      - "3001:3001"
