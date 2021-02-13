@@ -1,6 +1,5 @@
 require("../newrelic");
 const express = require("express");
-
 const path = require("path");
 const db = require("./db.js");
 const compression = require("compression");
@@ -23,12 +22,11 @@ app.use(compression());
 //   });
 // });
 app.use(express.static(path.join(__dirname, "./loader-io")));
-console.log(path.join(__dirname, "./loader-io"));
 
 // GET RESTAURANT AND ALL DISH INFO
 app.get("/restaurants/:id", function (req, res) {
-  const params = req.params.id; // body has restaurantId
-  db.queryRestaurant(params, (err, results) => {
+  const data = req.params.id; // body has restaurantId
+  db.queryRestaurant(data, (err, results) => {
     if (err) {
       console.log("error [get]: restaurant");
       res.sendStatus(404);
@@ -38,10 +36,9 @@ app.get("/restaurants/:id", function (req, res) {
   });
 });
 
-// GET REVIEW
-app.get("/restaurants/:id/dish/review/:id", function (req, res) {
-  const params = req.params.id;
-  db.queryReview(params, (err, results) => {
+app.get("/review/:revId", function (req, res) {
+  const data = req.params.revId;
+  db.queryReview(data, (err, results) => {
     if (err) {
       console.log("error [get]: review");
       res.sendStatus(404);
@@ -51,9 +48,11 @@ app.get("/restaurants/:id/dish/review/:id", function (req, res) {
   });
 });
 
-app.post("/restaurants/:id/review", function (req, res) {
-  let review = req.body;
-  db.insertReview(review, (err) => {
+app.post("/restaurants/:restId/dish/:dishId/review", function (req, res) {
+  const { params, body } = req;
+  const data = configureData("post", params, body);
+
+  db.insertReview(data, (err) => {
     if (err) {
       console.log("error [post]: review");
       res.sendStatus(404);
@@ -63,9 +62,12 @@ app.post("/restaurants/:id/review", function (req, res) {
   });
 });
 
-app.delete("/restaurants/:id/dish/review/:id", function (req, res) {
-  let reviewId = req.params.id;
-  db.deleteReview(reviewId, (err) => {
+app.delete("/review/:revId", function (req, res) {
+  const { params, body } = req;
+  const data = configureData("delete", params, body);
+  console.log(data);
+
+  db.deleteReview(data, (err) => {
     if (err) {
       console.log("error [delete]: review");
       res.sendStatus(404);
@@ -75,12 +77,11 @@ app.delete("/restaurants/:id/dish/review/:id", function (req, res) {
   });
 });
 
-app.patch("/restaurants/:id/dish/review/:id", function (req, res) {
-  let params = {
-    reviewId: req.params.id,
-    reviewUpdate: req.body,
-  };
-  db.updateReview(params, (err) => {
+app.patch("/review/:revId", function (req, res) {
+  const { params, body } = req;
+  const data = configureData("patch", params, body);
+
+  db.updateReview(data, (err) => {
     if (err) {
       console.log("error [update]: review");
       res.sendStatus(404);
@@ -89,5 +90,37 @@ app.patch("/restaurants/:id/dish/review/:id", function (req, res) {
     }
   });
 });
+
+function configureData(operation, params, body) {
+  const { restId, dishId, revId } = params;
+  let review, data;
+
+  switch (operation) {
+    case "post":
+      review = {
+        ...body,
+        restaurantId: Number(restId),
+        dishId: Number(dishId),
+      };
+      data = {
+        review,
+        userId: body.userId,
+      };
+      break;
+    case "delete":
+      data = {
+        userId: body.userId,
+        reviewId: revId,
+      };
+      break;
+    case "patch":
+      data = {
+        reviewId: Number(revId),
+        reviewUpdate: body,
+      };
+      break;
+  }
+  return data;
+}
 
 app.listen(PORT, () => console.log("Listening on port: " + PORT));

@@ -1,27 +1,12 @@
 const axios = require("axios");
 
-const id = "1";
-const patchId = "10000005";
-var review = {
-  reviewId: 10000005,
-  userReview: "Hello World",
-  userReviewDate: "11/19/2019",
-  userReviewRating: 5,
-  userId: 2,
-  dishId: 5,
-  restaurantId: 1,
-};
-
-var updateReview = {
+const revId = "10000035";
+const updateReview = {
   userReview: "Hello & Goodbye",
 };
 
-// PATCH
 axios
-  .patch(
-    `http://localhost:3001/restaurants/${id}/dish/review/${patchId}`,
-    updateReview
-  )
+  .patch(`http://localhost:3001/review/${revId}`, updateReview)
   .then((response) => {
     console.log("responses: ", response.data);
   })

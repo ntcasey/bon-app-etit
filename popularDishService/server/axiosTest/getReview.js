@@ -1,11 +1,9 @@
 const axios = require("axios");
 
-const id = "1";
-const reviewId = "1";
+const reviewId = "10000035";
 
-// GET
 axios
-  .get(`http://localhost:5000/restaurants/${id}/dish/review/${reviewId}`)
+  .get(`http://localhost:3001/review/${reviewId}`)
   .then((response) => {
     console.log("responses: ", response.data);
   })

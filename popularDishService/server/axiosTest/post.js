@@ -1,19 +1,19 @@
 const axios = require("axios");
 
-const id = "1";
+const restId = "1";
+const dishId = 5;
 const review = {
-  reviewId: 10000002,
   userReview: "Hello World",
   userReviewDate: "11/19/2019",
   userReviewRating: 5,
-  userId: 2,
-  dishId: 5,
-  restaurantId: 1,
+  userId: 69012,
 };
 
-// POST
 axios
-  .post(`http://localhost:3001/restaurants/${id}/review`, review)
+  .post(
+    `http://localhost:3001/restaurants/${restId}/dish/${dishId}/review`,
+    review
+  )
   .then((response) => {
     console.log("responses: ", response.data);
   })
