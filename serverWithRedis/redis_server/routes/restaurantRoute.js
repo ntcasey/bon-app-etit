@@ -4,7 +4,7 @@ const db = require("../db.js");
 const reviewRouter = require("./reviewRoute.js");
 const { client, getRestaurantCache } = require("../cache/index.js");
 
-router.use("/:restId/dish/review", reviewRouter);
+router.use("/:restId/dish/:dishId/review", reviewRouter);
 
 router.get("/:id", getRestaurantCache, (req, res) => {
   const id = req.params.id;

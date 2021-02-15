@@ -4,8 +4,10 @@ const DB_URL = "localhost";
 const connectionOptions = {
   useUnifiedTopology: true,
   useNewUrlParser: true,
+  useFindAndModify: false,
   poolSize: 1,
 };
+
 mongoose.connect(
   `mongodb://${DB_URL}/seedDB`,
   connectionOptions,
@@ -43,10 +45,24 @@ const UserSchema = new mongoose.Schema({
   userReviewsCount: Number,
 });
 
+const CounterReviewsSchema = new mongoose.Schema({
+  size: Number,
+});
+
 const Restaurants = mongoose.model("Restaurants", RestaurantSchema);
 const Reviews = mongoose.model("Reviews", ReviewSchema);
-const Users = mongoose.model("Users", UserSchema);
+const Users = mongoose.model("Users", UserSchema, "users");
+const CounterReviews = mongoose.model(
+  "CounterReviews",
+  CounterReviewsSchema,
+  "sizeReviews"
+);
 
+/**
+ * Queries Restaurant's Popular Dishes & Reviews
+ * @param {object} params : {Restaurant's ID}
+ * @param {Function} callback
+ */
 const queryRestaurant = async (id, callback) => {
   try {
     let rest = await Restaurants.find({ restaurantId: Number(id) }).limit(1);
@@ -54,15 +70,13 @@ const queryRestaurant = async (id, callback) => {
     var popularDishesReturn = [];
 
     for (let i = 0; i < popularDishesArr.length; i++) {
-      // get reviewId array so that we can query review table
       let currentDish = popularDishesArr[i];
       let reviews = await Reviews.find({
         dishId: currentDish.dishId,
       }).limit(8);
 
-      // here we have the review list for the dish,
-      // now we need to get the user with userId in the review
-      // list.
+      delete currentDish.reviewsId;
+
       let tempPopularDishObj = {};
       tempPopularDishObj.dishInfo = currentDish;
       let users = [];
@@ -87,44 +101,89 @@ const queryRestaurant = async (id, callback) => {
   callback(null, popularDishesReturn);
 };
 
+/**
+ * Get Review of Restaurant given Review ID
+ * @param {object} params : Review ID
+ * @param {Function} callback
+ */
 const queryReview = async (id) => {
   const stat = await Reviews.find({ reviewId: Number(id) }).limit(1);
-
   return new Promise((resolve, reject) => {
     if (stat.length === 0) {
-      reject("error");
+      reject("ERROR: Get Restaurant From Database");
     } else {
       resolve(stat[0]);
     }
   });
 };
 
-const insertReview = async (params) => {
-  const stat = await Reviews.collection.insertOne(params);
-  return new Promise((resolve, reject) => {
-    if (stat.insertedCount === 0) {
-      reject("error");
-    } else {
-      resolve(stat.ops[0]);
+/**
+ * Insert Review of Restaurant into Mongo Database
+ * @param {object} data : { User ID, Review ID }
+ * @param {Function} callback
+ */
+const insertReview = (data) => {
+  return new Promise(async (resolve, reject) => {
+    const { userId, review } = data;
+    try {
+      await Users.findOneAndUpdate(
+        { userId: userId },
+        { $inc: { userReviewsCount: 1 } }
+      );
+      const counter = await CounterReviews.findOneAndUpdate(
+        {},
+        { $inc: { size: 1 } },
+        { new: true }
+      );
+      review.reviewId = counter.size;
+      const stat = await Reviews.collection.insertOne(review);
+      if (stat.insertedCount === 0) {
+        reject("ERROR: Insert To Database");
+      } else {
+        resolve();
+      }
+    } catch (e) {
+      reject("ERROR: Increment User Review Count or Increment Counter");
     }
   });
 };
 
-const deleteReview = async (id) => {
-  const stat = await Reviews.deleteOne({ reviewId: Number(id) });
-  return new Promise((resolve, reject) => {
-    if (stat.deletedCount === 0) {
-      reject("error");
-    } else {
-      resolve();
+/**
+ * Delete Review of Restaurant in Mongo Database
+ * @param {object} data : { User ID, Review ID }
+ * @param {Function} callback
+ */
+const deleteReview = (data) => {
+  return new Promise(async (resolve, reject) => {
+    const { userId, reviewId } = data;
+    try {
+      await Users.findOneAndUpdate(
+        { userId: userId },
+        { $inc: { userReviewsCount: -1 } }
+      );
+
+      const stat = await Reviews.deleteOne({ reviewId: Number(reviewId) });
+      if (stat.deletedCount === 0) {
+        reject("ERROR: Delete Review From Database");
+      } else {
+        resolve();
+      }
+    } catch (e) {
+      reject("ERROR: Decrement User Review Count");
     }
   });
 };
 
-const updateReview = async (id, review) => {
+/**
+ * Update Review of Restaurant in Mongo Database
+ * @param {object} data : { Review ID, New Review Message }
+ * @param {Function} callback
+ */
+const updateReview = async (data, review) => {
+  const { reviewId, reviewUpdate } = data;
   const newDocument = await Reviews.findOneAndUpdate(
-    { reviewId: Number(id) },
-    { $set: review },
+    { reviewId: Number(reviewId) },
+    { $set: reviewUpdate },
     { new: true }
   );
 

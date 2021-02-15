@@ -20,9 +20,9 @@ app.get('/restaurants/:id', function(req, res) {
         })
 })
 
-app.get('/restaurants/:i/dish/review/:id', function(req, res) {
-    const reviewId = req.params.id;
-    axios.get(`http://ec2-18-218-130-114.us-east-2.compute.amazonaws.com:3001/restaurants/1/dish/review/${reviewId}`)
+app.get('/review/:reviewId', function(req, res) {
+    const reviewId = req.params.reviewId;
+    axios.get(`http://ec2-18-218-130-114.us-east-2.compute.amazonaws.com:3001/review/${reviewId}`)
         .then((response) => {
             res.send(response.data)
         })
@@ -31,10 +31,10 @@ app.get('/restaurants/:i/dish/review/:id', function(req, res) {
         })
 })
 
-app.post('/restaurants/:id/review', function(req, res) {
+app.post('/restaurants/:restId/dish/:dishId/review', function(req, res) {
+    const { restId, dishId } = req.params;
     const review = req.body;
-    const id = '1';
-    axios.post(`http://ec2-18-218-130-114.us-east-2.compute.amazonaws.com:3001/restaurants/${id}/review`, review)
+    axios.post(`http://ec2-18-218-130-114.us-east-2.compute.amazonaws.com:3001/restaurants/${restId}/dish/${dishId}/review`, review)
         .then(() => {
             console.log('success insert review');
             res.sendStatus(200);
@@ -44,10 +44,9 @@ app.post('/restaurants/:id/review', function(req, res) {
         })
 })
 
-app.delete('/restaurants/:id/dish/review/:id', function(req, res) {
-    const id = '1';
-    const reviewId = req.params.id;
-    axios.delete(`http://ec2-18-218-130-114.us-east-2.compute.amazonaws.com:3001/restaurants/${id}/dish/review/${reviewId}`)
+app.delete('/review/:reviewId', function(req, res) {
+    const reviewId = req.params.reviewId;
+    axios.delete(`http://ec2-18-218-130-114.us-east-2.compute.amazonaws.com:3001/review/${reviewId}`)
         .then(() => {
             console.log('success delete review');
             res.sendStatus(200);
@@ -57,12 +56,10 @@ app.delete('/restaurants/:id/dish/review/:id', function(req, res) {
         })
 })
 
-app.patch('/restaurants/:id/dish/review/:id', function(req, res) {
-    const id = '1';
-    const patchId = req.params.id;
+app.patch('/review/:revId', function(req, res) {
+    const reviewId = req.params.reviewId;
     const reviewUpdate = req.body;
-
-    axios.patch(`http://ec2-18-218-130-114.us-east-2.compute.amazonaws.com:3001/restaurants/${id}/dish/review/${patchId}`, reviewUpdate)
+    axios.patch(`http://ec2-18-218-130-114.us-east-2.compute.amazonaws.com:3001/review/${reviewId}`, reviewUpdate)
         .then(() => {
             console.log('success update review');
             res.sendStatus(200);

@@ -50,9 +50,11 @@ const postReviewCache = (req, res, next) => {
 
 const deleteReviewCache = (req, res, next) => {
   const id = req.params.id;
+  req.deletedFromCache = false;
   client.del(`review${id}`, (err, response) => {
     if (response === 1) {
       console.log("entry removed cache");
+      req.deletedFromCache = true;
       res.sendStatus(200);
     }
   });
